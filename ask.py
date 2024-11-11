@@ -1,11 +1,12 @@
 import chromadb
+from sentence_transformers import SentenceTransformer
 from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # setting the environment
-
+embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
 DATA_PATH = r"data"
 CHROMA_PATH = r"chroma_db"
 
@@ -15,14 +16,15 @@ collection = chroma_client.get_or_create_collection(name="growing_vegetables")
 
 
 user_query = input("What do you want to know about growing vegetables?\n\n")
+user_query_embedding = embedding_model.encode(user_query).tolist()
 
 results = collection.query(
-    query_texts=[user_query],
+    query_embeddings=[user_query_embedding],
     n_results=1
 )
 
-#print(results['documents'])
-#print(results['metadatas'])
+print(results['documents'])
+print(results['metadatas'])
 
 client = OpenAI()
 

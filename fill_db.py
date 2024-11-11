@@ -1,6 +1,13 @@
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import chromadb
+from sentence_transformers import SentenceTransformer
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
 
 # setting the environment
 
@@ -29,25 +36,27 @@ text_splitter = RecursiveCharacterTextSplitter(
 chunks = text_splitter.split_documents(raw_documents)
 
 # preparing to be added in chromadb
-
 documents = []
 metadata = []
 ids = []
+embeddings = [] 
 
 i = 0
-
 for chunk in chunks:
     documents.append(chunk.page_content)
     ids.append("ID"+str(i))
     metadata.append(chunk.metadata)
 
+    embedding = embedding_model.encode(chunk.page_content)
+    embeddings.append(embedding.tolist())
+
     i += 1
 
 # adding to chromadb
-
-
 collection.upsert(
     documents=documents,
     metadatas=metadata,
-    ids=ids
+    ids=ids,
+    embeddings=embeddings 
 )
+
